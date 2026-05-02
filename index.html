@@ -1072,15 +1072,15 @@ function renderGrid() {
       <div class="oh-card-date">${fmtDate(oh.date)}</div>
       <div class="oh-card-stats">
         <div class="oh-stat">
-          <div class="oh-stat-val">${oh.visitors.length}</div>
+          <div class="oh-stat-val">${Object.values(oh.visitors||{}).length}</div>
           <div class="oh-stat-label">Visitors</div>
         </div>
         <div class="oh-stat">
-          <div class="oh-stat-val">${oh.visitors.filter(v => v.listings === 'yes').length}</div>
+          <div class="oh-stat-val">${Object.values(oh.visitors||{}).filter(v => v.listings === 'yes').length}</div>
           <div class="oh-stat-label">Want Listings</div>
         </div>
         <div class="oh-stat">
-          <div class="oh-stat-val">${oh.visitors.filter(v => v.agent === 'no').length}</div>
+          <div class="oh-stat-val">${Object.values(oh.visitors||{}).filter(v => v.agent === 'no').length}</div>
           <div class="oh-stat-label">No Agent</div>
         </div>
       </div>
@@ -1102,7 +1102,7 @@ window.selectOH = function(id) {
 
 function renderVisitors(oh) {
   const el = document.getElementById('visitors-list');
-  if (!oh.visitors.length) {
+  if (!Object.values(oh.visitors||{}).length) {
     el.innerHTML = '<div class="no-visitors">No visitors yet for this open house.</div>';
     return;
   }
@@ -1110,7 +1110,7 @@ function renderVisitors(oh) {
     <div class="visitor-row header-row">
       <span>Name</span><span>Email</span><span>Phone</span><span>Has Agent</span><span>Wants Listings</span><span>Time</span><span></span>
     </div>
-    ${oh.visitors.slice().reverse().map(v => `
+    ${Object.values(oh.visitors||{}).slice().reverse().map(v => `
       <div class="visitor-row">
         <span class="visitor-name">${escH(v.firstName)} ${escH(v.lastName)}</span>
         <span class="visitor-email">${escH(v.email)}</span>
@@ -1127,7 +1127,7 @@ function renderVisitors(oh) {
 // ─── DELETE VISITOR ───────────────────────────────────────────────────────────
 window.deleteVisitor = async function(ohId, vid) {
   const oh = openHouses.find(x => x.id === ohId);
-  oh.visitors = oh.visitors.filter(v => v.id !== vid);
+  Object.values(oh.visitors||{}) = Object.values(oh.visitors||{}).filter(v => v.id !== vid);
   await saveOne(oh);
   toast('Visitor removed');
 };
@@ -1136,7 +1136,7 @@ window.deleteVisitor = async function(ohId, vid) {
 window.confirmDeleteOH = function(id) {
   const oh = openHouses.find(x => x.id === id);
   document.getElementById('confirm-del-msg').textContent =
-    `Delete "${oh.address}" (${fmtDate(oh.date)}) and all ${oh.visitors.length} visitor record(s)? This cannot be undone.`;
+    `Delete "${oh.address}" (${fmtDate(oh.date)}) and all ${Object.values(oh.visitors||{}).length} visitor record(s)? This cannot be undone.`;
   window.openModal('confirm-del-modal');
   const btn = document.getElementById('confirm-del-btn');
   const newBtn = btn.cloneNode(true);
@@ -1220,7 +1220,7 @@ window.submitSignin = async function() {
     timestamp
   };
   const oh = openHouses.find(x => x.id === currentOHId);
-  oh.visitors.push(visitor);
+  Object.values(oh.visitors||{}).push(visitor);
   showScreen('success-screen');
   await saveOne(oh);
 };
@@ -1230,10 +1230,10 @@ window.nextVisitor = function() { resetSigninForm(); showScreen('signin-screen')
 // ─── EXPORT CSV ───────────────────────────────────────────────────────────────
 window.exportCurrentOH = function() {
   const oh = openHouses.find(x => x.id === currentOHId);
-  if (!oh || !oh.visitors.length) { toast('No visitors to export'); return; }
+  if (!oh || !Object.values(oh.visitors||{}).length) { toast('No visitors to export'); return; }
   const rows = [
     ['First Name', 'Last Name', 'Email', 'Phone', 'Has Agent', 'Wants Listings', 'Sign-In Time'],
-    ...oh.visitors.map(v => [v.firstName, v.lastName, v.email, v.phone || '', v.agent, v.listings, v.timestamp])
+    ...Object.values(oh.visitors||{}).map(v => [v.firstName, v.lastName, v.email, v.phone || '', v.agent, v.listings, v.timestamp])
   ];
   const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
